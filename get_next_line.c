@@ -1,6 +1,6 @@
 #include "get_next_line.h"
 
-static int		find_nl(char *str)
+static int	find_endline(char *str)
 {
 	int		i;
 
@@ -14,29 +14,29 @@ static int		find_nl(char *str)
 	return (-1);
 }
 
-static int		last_line(char **array, char **line)
+static int		last_line(char **str, char **line)
 {
-	if (!(*line = ft_strdup(*array)))
+	if (!(*line = ft_strdup(*str)))
 		return (-1);
-	free(*array);
-	*array = ft_strnew(0);
+	free(*str);
+	*str = ft_strnew(0);
 	return (1);
 }
 
-static int		cut_line(char **array, char **line, int len)
+static int		cut_line(char **str, char **line, int len)
 {
 	char	*tmp;
 
-	if (!(*line = ft_strsub(*array, 0, len)))
+	if (!(*line = ft_strsub(*str, 0, len)))
 		return (-1);
-	tmp = *array;
-	if (!(*array = ft_strdup(ft_strchr(*array, '\n') + 1)))
+	tmp = *str;
+	if (!(*str = ft_strdup(ft_strchr(*str, '\n') + 1)))
 		return (-1);
 	ft_strdel(&tmp);
 	return (1);
 }
 
-static int		read_file(int fd, char **array, char **line)
+static int		read_file(int fd, char **str, char **line)
 {
 	char	buf[BUFF_SIZE + 1];
 	int		ret;
@@ -48,33 +48,33 @@ static int		read_file(int fd, char **array, char **line)
 		if (ret == -1)
 			return (-1);
 		buf[ret] = '\0';
-		tmp = *array;
-		*array = ft_strjoin(*array, buf);
+		tmp = *str;
+		*str = ft_strjoin(*str, buf);
 		ft_strdel(&tmp);
-		if ((len = find_nl(*array)) > -1)
-			return (cut_line(array, line, len));
+		if ((len = find_endline(*str)) > -1)
+			return (cut_line(str, line, len));
 	}
 	return (-2);
 }
 
 int				get_next_line(int fd, char **line)
 {
-	static char		*array[2560];
+	static char		*str[2560];
 	int				len;
 	int				ret;
 
 	if (fd < 0 || fd == 1 || fd == 2 || fd > 2559 \
 			|| BUFF_SIZE <= 0 || line == NULL)
 		return (-1);
-	if (array[fd] == NULL)
-		array[fd] = ft_strnew(0);
-	if (ft_strlen(array[fd]) && (len = find_nl(array[fd])) != -1)
-		return (cut_line(&array[fd], line, len));
-	if ((ret = read_file(fd, &array[fd], line)) && ret != -2)
+	if (str[fd] == NULL)
+		str[fd] = ft_strnew(0);
+	if (ft_strlen(str[fd]) && (len = find_endline(str[fd])) != -1)
+		return (cut_line(&str[fd], line, len));
+	if ((ret = read_file(fd, &str[fd], line)) && ret != -2)
 		return (ret);
-	if (array[fd] && find_nl(array[fd]) == -1 && ft_strlen(array[fd]))
-		return (last_line(&array[fd], line));
+	if (str[fd] && find_endline(str[fd]) == -1 && ft_strlen(str[fd]))
+		return (last_line(&str[fd], line));
 	*line = ft_strdup("");
-	ft_strclr(array[fd]);
+	ft_strclr(str[fd]);
 	return (0);
 }
